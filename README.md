@@ -41,3 +41,18 @@ $$
 
 ## 3.矩阵分解
 
+矩阵分解采用文档中给出的公式进行迭代：
+$$
+U=(1-2\lambda\alpha)U+\alpha(A\bigodot(X-UV^T))V\\
+V =(1-2\lambda\alpha)V+\alpha(A\bigodot(X-UV^T))U
+$$
+此外，为了更好地优化参数，考虑对学习率$\alpha$进行动态调整，具体策略为：
+
+- 计算梯度，得到更新后的分解矩阵$U_2=U-\alpha\frac{\part J}{\part U}$，$V_2=V-\alpha\frac{\part V}{\part V}$。
+- 对比$J(U,V,X)$与$J(U_2,V_2,X)$，若更新后的loss小，则$U\leftarrow U_2,V\leftarrow V_2$
+- 否则不对$U,V$进行更新，$\alpha \leftarrow \alpha / 10$
+
+迭代停止条件为达到最大的迭代次数，由于计算中$UV^T$并不是稀疏矩阵，故而此次计算直接采用python的**numpy.ndarray**。除此之外，经过实验，发现$U,V$的初始化也十分重要，否则很容易出现梯度爆炸以及迭代次数很多，loss却还是很大的问题。对$U,V$赋予较小的值，有利于后续的优化算法。故而对$U,V$的初始化策略为：$U,V$每个值赋予$[\frac{-0.1}{\sqrt{k}}, \frac{0.1}{\sqrt{k}}]$区间内均匀分布的随机数。
+
+
+
